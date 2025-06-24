@@ -6,7 +6,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.sql.Timestamp;
+import java.sql.PreparedStatement;
+import java.util.List;
 
 @Repository
 public class UserActionRepository {
@@ -57,9 +60,48 @@ public class UserActionRepository {
         }
     }
 
-    public void saveAsync(UserAction userAction) {
-        // Implementation will use async executor
-        CompletableFuture.runAsync(() -> save(userAction));
+    @Transactional
+    public void saveBatch(List<UserAction> userActions) {
+        if (userActions.isEmpty()) {
+            return;
+        }
+
+        String sql = String.format("""
+        INSERT INTO %s (trace_id, user_id, action, action_data, session_id, 
+                       ip_address, user_agent, http_method, endpoint, request_size, 
+                       response_status, response_size, duration_ms, timestamp, created_at)
+        VALUES (?::uuid, ?, ?, ?::jsonb, ?, ?::inet, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, tableName);
+
+        try {
+            jdbcTemplate.batchUpdate(sql, userActions, userActions.size(),
+                    (PreparedStatement ps, UserAction userAction) -> {
+                        try {
+                            String actionDataJson = userAction.actionData() != null ?
+                                    objectMapper.writeValueAsString(userAction.actionData()) : null;
+
+                            ps.setString(1, userAction.traceId().toString());
+                            ps.setString(2, userAction.userId());
+                            ps.setString(3, userAction.action());
+                            ps.setString(4, actionDataJson);
+                            ps.setString(5, userAction.sessionId());
+                            ps.setString(6, userAction.ipAddress());
+                            ps.setString(7, userAction.userAgent());
+                            ps.setString(8, userAction.httpMethod());
+                            ps.setString(9, userAction.endpoint());
+                            ps.setObject(10, userAction.requestSize());
+                            ps.setObject(11, userAction.responseStatus());
+                            ps.setObject(12, userAction.responseSize());
+                            ps.setObject(13, userAction.durationMs());
+                            ps.setTimestamp(14, Timestamp.from(userAction.timestamp()));
+                            ps.setTimestamp(15, Timestamp.from(userAction.createdAt()));
+                        } catch (Exception e) {
+                            throw new RuntimeException("Error setting parameters for batch insert", e);
+                        }
+                    });
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to batch save user actions", e);
+        }
     }
 }
 

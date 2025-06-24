@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.UUID;
+
 @Aspect
 @Component
 public class PropagateTraceAspect {
@@ -19,7 +21,7 @@ public class PropagateTraceAspect {
     public Object propagateTrace(ProceedingJoinPoint joinPoint, PropagateTrace propagateTrace) throws Throwable {
 
         // Capture current trace context
-        String currentTraceId = TraceContext.getTraceId();
+        UUID currentTraceId = TraceContext.getTraceId();
         String currentUserId = TraceContext.getUserId();
 
         // Generate new trace ID if none exists and auto-generation is enabled

@@ -3,8 +3,10 @@ package com.openrangelabs.tracer.controller;
 import com.openrangelabs.tracer.config.TracingProperties;
 import com.openrangelabs.tracer.context.TraceContext;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -18,10 +20,12 @@ public class TracingController {
 
     private final JdbcTemplate jdbcTemplate;
     private final TracingProperties properties;
+    private final ApplicationContext applicationContext;
 
-    public TracingController(JdbcTemplate jdbcTemplate, TracingProperties properties) {
+    public TracingController(JdbcTemplate jdbcTemplate, TracingProperties properties, ApplicationContext applicationContext) {
         this.jdbcTemplate = jdbcTemplate;
         this.properties = properties;
+        this.applicationContext = applicationContext;
     }
 
     @GetMapping("/health")
@@ -148,5 +152,41 @@ public class TracingController {
         context.put("hasTraceContext", TraceContext.getTraceId() != null);
 
         return ResponseEntity.ok(context);
+    }
+
+    @GetMapping("/health/detailed")
+    public ResponseEntity<Map<String, Object>> detailedHealthCheck() {
+        Map<String, Object> health = new HashMap<>();
+
+        try {
+            // Database connectivity check
+            long start = System.currentTimeMillis();
+            Integer pingResult = jdbcTemplate.queryForObject("SELECT 1", Integer.class);
+            long dbLatency = System.currentTimeMillis() - start;
+
+            // Thread pool health
+            ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor)
+                    applicationContext.getBean("tracingExecutor");
+
+            health.put("status", "UP");
+            health.put("database", Map.of(
+                    "status", "UP",
+                    "latencyMs", dbLatency
+            ));
+            health.put("threadPool", Map.of(
+                    "activeThreads", executor.getActiveCount(),
+                    "poolSize", executor.getPoolSize(),
+                    "corePoolSize", executor.getCorePoolSize(),
+                    "maxPoolSize", executor.getMaxPoolSize(),
+                    "queueSize", executor.getThreadPoolExecutor().getQueue().size()
+            ));
+
+            return ResponseEntity.ok(health);
+
+        } catch (Exception e) {
+            health.put("status", "DOWN");
+            health.put("error", e.getMessage());
+            return ResponseEntity.status(503).body(health);
+        }
     }
 }

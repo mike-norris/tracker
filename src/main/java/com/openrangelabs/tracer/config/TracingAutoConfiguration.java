@@ -2,32 +2,38 @@ package com.openrangelabs.tracer.config;
 
 import com.openrangelabs.tracer.aspect.*;
 import com.openrangelabs.tracer.filter.TracingFilter;
+import com.openrangelabs.tracer.metrics.TracingMetrics;
 import com.openrangelabs.tracer.repository.JobExecutionRepository;
 import com.openrangelabs.tracer.repository.UserActionRepository;
+import com.openrangelabs.tracer.service.BatchTracingService;
 import com.openrangelabs.tracer.service.JobTracingService;
 import com.openrangelabs.tracer.service.TracingService;
 import com.openrangelabs.tracer.controller.TracingController;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import io.micrometer.core.instrument.MeterRegistry;
 
+import javax.sql.DataSource;
+import java.util.Optional;
 import java.util.concurrent.Executor;
 
 @AutoConfiguration
 @ConditionalOnClass({JdbcTemplate.class})
+@ConditionalOnBean(DataSource.class)  // Add this - ensures DataSource exists
 @ConditionalOnProperty(prefix = "tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(TracingProperties.class)
 @EnableAspectJAutoProxy
 @EnableAsync
+@EnableScheduling
 public class TracingAutoConfiguration {
 
     @Bean
@@ -123,8 +129,9 @@ public class TracingAutoConfiguration {
     @ConditionalOnProperty(prefix = "tracing.monitoring", name = "metricsEnabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean
     public TracingController tracingController(JdbcTemplate jdbcTemplate,
-                                               TracingProperties properties) {
-        return new TracingController(jdbcTemplate, properties);
+                                               TracingProperties properties,
+                                               ApplicationContext applicationContext) {
+        return new TracingController(jdbcTemplate, properties, applicationContext);
     }
 
     @Bean
@@ -132,5 +139,23 @@ public class TracingAutoConfiguration {
     public TracingSchemaInitializer tracingSchemaInitializer(JdbcTemplate jdbcTemplate,
                                                              TracingProperties properties) {
         return new TracingSchemaInitializer(jdbcTemplate, properties);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(MeterRegistry.class)
+    public TracingMetrics tracingMetrics() {
+        return new TracingMetrics();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean({DataSource.class})  // Ensure DataSource exists
+    public BatchTracingService batchTracingService(UserActionRepository userActionRepository,
+                                                   JobExecutionRepository jobExecutionRepository,
+                                                   TracingProperties properties,
+                                                   Optional<TracingMetrics> tracingMetrics) {
+        return new BatchTracingService(userActionRepository, jobExecutionRepository,
+                properties, tracingMetrics);
     }
 }

@@ -35,6 +35,18 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-web'
     api 'org.springframework.boot:spring-boot-starter-data-jdbc'
     api 'org.springframework.boot:spring-boot-starter-aop'
+    api 'org.springframework.boot:spring-boot-starter-jdbc'
+
+    implementation 'org.springframework:spring-context'
+    implementation 'org.springframework:spring-context-support' // For @Scheduled
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.1.0'
+    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
+
+    implementation 'io.micrometer:micrometer-core'
+    // Optional: For specific registry (Prometheus, etc.)
+    // implementation 'io.micrometer:micrometer-registry-prometheus'
 
     implementation 'org.postgresql:postgresql:42.7.7'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'

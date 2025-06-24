@@ -4,6 +4,7 @@ import com.openrangelabs.tracer.context.TraceContext;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
 
@@ -18,7 +19,7 @@ public class TraceContextExecutor {
      */
     @Async("tracingExecutor")
     public <T> CompletableFuture<T> executeWithTrace(Supplier<T> task) {
-        String traceId = TraceContext.getTraceId();
+        UUID traceId = TraceContext.getTraceId();
         String userId = TraceContext.getUserId();
 
         return CompletableFuture.supplyAsync(() -> {
@@ -36,7 +37,7 @@ public class TraceContextExecutor {
      */
     @Async("tracingExecutor")
     public CompletableFuture<Void> executeWithTrace(Runnable task) {
-        String traceId = TraceContext.getTraceId();
+        UUID traceId = TraceContext.getTraceId();
         String userId = TraceContext.getUserId();
 
         return CompletableFuture.runAsync(() -> {

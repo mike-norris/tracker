@@ -23,14 +23,14 @@ public class JobTracingService {
         this.objectMapper = objectMapper;
     }
 
-    public String startJob(String jobType, String jobName, Object inputData) {
+    public UUID startJob(String jobType, String jobName, Object inputData) {
         return startJob(jobType, jobName, inputData, null, "default", 5);
     }
 
-    public String startJob(String jobType, String jobName, Object inputData,
+    public UUID startJob(String jobType, String jobName, Object inputData,
                            String parentJobId, String queueName, int priority) {
-        String jobId = UUID.randomUUID().toString();
-        String traceId = TraceContext.getTraceId();
+        UUID jobId = UUID.randomUUID();
+        UUID traceId = TraceContext.getTraceId();
         String userId = TraceContext.getUserId();
 
         JsonNode inputDataNode = null;
@@ -57,17 +57,17 @@ public class JobTracingService {
         return jobId;
     }
 
-    public void updateJobStatus(String jobId, JobStatus status) {
+    public void updateJobStatus(UUID jobId, JobStatus status) {
         updateJobStatus(jobId, status, null, null);
     }
 
-    public void updateJobStatus(String jobId, JobStatus status, Object outputData, String errorMessage) {
+    public void updateJobStatus(UUID jobId, JobStatus status, Object outputData, String errorMessage) {
         // For status updates, we could either update in place or create a new record
         // This implementation updates in place for simplicity
         jobExecutionRepository.updateStatus(jobId, status, errorMessage);
     }
 
-    public void completeJob(String jobId, Object outputData) {
+    public void completeJob(UUID jobId, Object outputData) {
         JsonNode outputDataNode = null;
         if (outputData != null) {
             outputDataNode = objectMapper.valueToTree(outputData);
@@ -77,7 +77,7 @@ public class JobTracingService {
         updateJobStatus(jobId, JobStatus.COMPLETED, outputData, null);
     }
 
-    public void failJob(String jobId, String errorMessage, String stackTrace) {
+    public void failJob(UUID jobId, String errorMessage, String stackTrace) {
         updateJobStatus(jobId, JobStatus.FAILED, null, errorMessage);
     }
 

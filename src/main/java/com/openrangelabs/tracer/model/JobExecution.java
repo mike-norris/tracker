@@ -2,11 +2,12 @@ package com.openrangelabs.tracer.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
+import java.util.UUID;
 
 public record JobExecution(
         Long id,
-        String traceId,
-        String jobId,
+        UUID traceId,
+        UUID jobId,
         String jobType,
         String jobName,
         String parentJobId,
@@ -36,8 +37,8 @@ public record JobExecution(
     }
 
     public static class Builder {
-        private String traceId;
-        private String jobId;
+        private UUID traceId;
+        private UUID jobId;
         private String jobType;
         private String jobName;
         private String parentJobId;
@@ -60,8 +61,8 @@ public record JobExecution(
         private Double cpuUsagePercent;
 
         // Builder methods (similar pattern as UserAction)
-        public Builder traceId(String traceId) { this.traceId = traceId; return this; }
-        public Builder jobId(String jobId) { this.jobId = jobId; return this; }
+        public Builder traceId(UUID traceId) { this.traceId = traceId; return this; }
+        public Builder jobId(UUID jobId) { this.jobId = jobId; return this; }
         public Builder jobType(String jobType) { this.jobType = jobType; return this; }
         public Builder jobName(String jobName) { this.jobName = jobName; return this; }
         public Builder parentJobId(String parentJobId) { this.parentJobId = parentJobId; return this; }
