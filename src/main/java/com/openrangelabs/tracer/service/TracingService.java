@@ -9,6 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.JsonNode;
 
+import java.util.UUID;
+
 @Service
 public class TracingService {
 
@@ -29,7 +31,7 @@ public class TracingService {
     }
 
     public void logUserAction(String action, Object actionData, HttpServletRequest request) {
-        String traceId = TraceContext.getTraceId();
+        UUID traceId = TraceContext.getTraceId();
         String userId = TraceContext.getUserId();
 
         if (traceId == null) {
@@ -66,7 +68,7 @@ public class TracingService {
                                         long startTime, int responseStatus) {
         long duration = System.currentTimeMillis() - startTime;
 
-        String traceId = TraceContext.getTraceId();
+        UUID traceId = TraceContext.getTraceId();
         String userId = TraceContext.getUserId();
 
         UserAction userAction = UserAction.builder()

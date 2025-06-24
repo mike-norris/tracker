@@ -2,10 +2,11 @@ package com.openrangelabs.tracer.model;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import java.time.Instant;
+import java.util.UUID;
 
 public record UserAction(
         Long id,
-        String traceId,
+        UUID traceId,
         String userId,
         String action,
         JsonNode actionData,
@@ -26,7 +27,7 @@ public record UserAction(
     }
 
     public static class Builder {
-        private String traceId;
+        private UUID traceId;
         private String userId;
         private String action;
         private JsonNode actionData;
@@ -40,7 +41,7 @@ public record UserAction(
         private Integer responseSize;
         private Long durationMs;
 
-        public Builder traceId(String traceId) { this.traceId = traceId; return this; }
+        public Builder traceId(UUID traceId) { this.traceId = traceId; return this; }
         public Builder userId(String userId) { this.userId = userId; return this; }
         public Builder action(String action) { this.action = action; return this; }
         public Builder actionData(JsonNode actionData) { this.actionData = actionData; return this; }

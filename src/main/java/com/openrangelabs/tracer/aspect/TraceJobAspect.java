@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.OperatingSystemMXBean;
+import java.util.UUID;
 
 @Aspect
 @Component
@@ -41,7 +42,7 @@ public class TraceJobAspect {
         }
 
         // Start job tracking
-        String jobId = jobTracingService.startJob(
+        UUID jobId = jobTracingService.startJob(
                 traceJob.jobType(),
                 jobName,
                 inputData,

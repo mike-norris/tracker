@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @Order(1)
@@ -31,14 +32,17 @@ public class TracingFilter implements Filter {
         HttpServletRequest httpRequest = (HttpServletRequest) request;
         HttpServletResponse httpResponse = (HttpServletResponse) response;
 
-        String traceId = httpRequest.getHeader(properties.traceIdHeader());
+        UUID traceId;
+        String traceIdStr = httpRequest.getHeader(properties.traceIdHeader());
 
-        if (traceId == null || traceId.isEmpty()) {
+        if (traceIdStr == null || traceIdStr.isEmpty()) {
             traceId = TraceContext.generateTraceId();
+        } else {
+            traceId = UUID.fromString(traceIdStr);
         }
 
         TraceContext.setTraceId(traceId);
-        httpResponse.setHeader(properties.traceIdHeader(), traceId);
+        httpResponse.setHeader(properties.traceIdHeader(), traceId.toString());
 
         // Extract user ID from common locations
         String userId = extractUserId(httpRequest);

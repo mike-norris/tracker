@@ -20,3 +20,20 @@ tracing:
     metrics-enabled: true
     endpoint: /actuator/tracer
     health-check: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    metrics:
+      access: read_only
+    prometheus:
+      access: read_only
+  metrics:
+    prometheus:
+      export:
+        enabled: true
+    tags:
+      application: ${spring.application.name:tracer}
+      version: ${spring.application.version:unknown}

@@ -4,10 +4,10 @@ import org.slf4j.MDC;
 import java.util.UUID;
 
 public class TraceContext {
-    private static final ThreadLocal<String> traceIdHolder = new ThreadLocal<>();
+    private static final ThreadLocal<UUID> traceIdHolder = new ThreadLocal<>();
     private static final ThreadLocal<String> userIdHolder = new ThreadLocal<>();
 
-    public static String getTraceId() {
+    public static UUID getTraceId() {
         return traceIdHolder.get();
     }
 
@@ -15,9 +15,9 @@ public class TraceContext {
         return userIdHolder.get();
     }
 
-    public static void setTraceId(String traceId) {
+    public static void setTraceId(UUID traceId) {
         traceIdHolder.set(traceId);
-        MDC.put("traceId", traceId);
+        MDC.put("traceId", traceId.toString());
     }
 
     public static void setUserId(String userId) {
@@ -25,8 +25,8 @@ public class TraceContext {
         MDC.put("userId", userId);
     }
 
-    public static String generateTraceId() {
-        return UUID.randomUUID().toString();
+    public static UUID generateTraceId() {
+        return UUID.randomUUID();
     }
 
     public static void clear() {
@@ -35,7 +35,7 @@ public class TraceContext {
         MDC.clear();
     }
 
-    public static void copyFromParent(String traceId, String userId) {
+    public static void copyFromParent(UUID traceId, String userId) {
         if (traceId != null) setTraceId(traceId);
         if (userId != null) setUserId(userId);
     }

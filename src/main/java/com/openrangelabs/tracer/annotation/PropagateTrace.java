@@ -7,11 +7,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface TraceUserAction {
-    String value() default "";
-    String category() default "USER_ACTION";
-    boolean includeArgs() default false;
-    boolean includeResult() default false;
-    boolean measureTiming() default true;
-    boolean async() default true;
+public @interface PropagateTrace {
+    boolean autoGenerate() default true;
+    boolean copyUserContext() default true;
 }
