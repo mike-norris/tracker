@@ -8,6 +8,7 @@ i# Compiled class files and other build artifacts
 
 # Gradle-specific files and directories
 .gradle/
+gradle/
 .gradletasknamecache
 gradle-app.setting
 !gradle-wrapper.jar  # Keep the Gradle wrapper JAR for consistent builds

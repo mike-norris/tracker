@@ -1,0 +1,22 @@
+tracing:
+  enabled: true
+  trace-id-header: X-Trace-ID
+  mdc-key: traceId
+  auto-create-tables: true
+  retention-months: 18
+  database:
+    user-actions-table: user_actions
+    job-executions-table: job_executions
+    enable-partitioning: false
+    batch-size: 1000
+  async:
+    enabled: true
+    thread-pool-name: tracing-executor
+    core-pool-size: 5
+    max-pool-size: 20
+    keep-alive-seconds: 60
+    queue-capacity: 500
+  monitoring:
+    metrics-enabled: true
+    endpoint: /actuator/tracer
+    health-check: true
