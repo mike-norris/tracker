@@ -1,0 +1,53 @@
+tracing:
+  enabled: true
+  trace-id-header: X-Trace-ID
+  mdc-key: traceId
+  auto-create-tables: true
+  retention-months: 18
+  database:
+    user-actions-table: user_actions
+    job-executions-table: job_executions
+    enable-partitioning: false
+    batch-size: 1000
+    database:
+      # For Mongo enable the following
+      #type: mongodb
+      #mongodb:
+      #  uri: mongodb://localhost:27017/tracing
+      #  database: tracing
+      # END Mongo
+      # For SQL database enable the following
+      type: postgresql
+      connection:
+        url: jdbc:postgresql://localhost:5432/tracing
+        username: tracer
+        password: password
+      # END SQL
+  async:
+    enabled: true
+    thread-pool-name: tracing-executor
+    core-pool-size: 5
+    max-pool-size: 20
+    keep-alive-seconds: 60
+    queue-capacity: 500
+  monitoring:
+    metrics-enabled: true
+    endpoint: /actuator/tracer
+    health-check: true
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    metrics:
+      access: read_only
+    prometheus:
+      access: read_only
+  metrics:
+    prometheus:
+      export:
+        enabled: true
+    tags:
+      application: ${spring.application.name:tracer}
+      version: ${spring.application.version:unknown}

@@ -69,7 +69,8 @@ dependencies {
     compileOnly 'org.springframework.boot:spring-boot-starter-web'
 
     // Actuator for health checks and metrics (optional)
-    compileOnly 'org.springframework.boot:spring-boot-starter-actuator'
+    api 'org.springframework.boot:spring-boot-starter-actuator'
+
 
     // Resilience4j for circuit breaker (optional)
     compileOnly 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
