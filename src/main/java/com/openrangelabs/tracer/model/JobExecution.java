@@ -6,11 +6,11 @@ import java.util.UUID;
 
 public record JobExecution(
         Long id,
-        UUID traceId,
-        UUID jobId,
+        UUID traceId,        // Changed from String to UUID
+        UUID jobId,          // Changed from String to UUID
         String jobType,
         String jobName,
-        String parentJobId,
+        UUID parentJobId,    // Changed from String to UUID
         String userId,
         JobStatus status,
         Integer priority,
@@ -37,11 +37,11 @@ public record JobExecution(
     }
 
     public static class Builder {
-        private UUID traceId;
-        private UUID jobId;
+        private UUID traceId;       // Changed from String to UUID
+        private UUID jobId;         // Changed from String to UUID
         private String jobType;
         private String jobName;
-        private String parentJobId;
+        private UUID parentJobId;   // Changed from String to UUID
         private String userId;
         private JobStatus status = JobStatus.PENDING;
         private Integer priority = 5;
@@ -60,12 +60,43 @@ public record JobExecution(
         private Integer memoryUsageMb;
         private Double cpuUsagePercent;
 
-        // Builder methods (similar pattern as UserAction)
-        public Builder traceId(UUID traceId) { this.traceId = traceId; return this; }
-        public Builder jobId(UUID jobId) { this.jobId = jobId; return this; }
+        // Builder methods with UUID support
+        public Builder traceId(UUID traceId) {
+            this.traceId = traceId;
+            return this;
+        }
+
+        // Convenience method to accept String and convert to UUID
+        public Builder traceId(String traceId) {
+            this.traceId = traceId != null ? UUID.fromString(traceId) : null;
+            return this;
+        }
+
+        public Builder jobId(UUID jobId) {
+            this.jobId = jobId;
+            return this;
+        }
+
+        // Convenience method to accept String and convert to UUID
+        public Builder jobId(String jobId) {
+            this.jobId = jobId != null ? UUID.fromString(jobId) : null;
+            return this;
+        }
+
         public Builder jobType(String jobType) { this.jobType = jobType; return this; }
         public Builder jobName(String jobName) { this.jobName = jobName; return this; }
-        public Builder parentJobId(String parentJobId) { this.parentJobId = parentJobId; return this; }
+
+        public Builder parentJobId(UUID parentJobId) {
+            this.parentJobId = parentJobId;
+            return this;
+        }
+
+        // Convenience method to accept String and convert to UUID
+        public Builder parentJobId(String parentJobId) {
+            this.parentJobId = parentJobId != null ? UUID.fromString(parentJobId) : null;
+            return this;
+        }
+
         public Builder userId(String userId) { this.userId = userId; return this; }
         public Builder status(JobStatus status) { this.status = status; return this; }
         public Builder priority(Integer priority) { this.priority = priority; return this; }

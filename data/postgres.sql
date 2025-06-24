@@ -38,7 +38,7 @@ CREATE TABLE user_actions (
 CREATE TABLE job_executions (
                                 id BIGSERIAL,
                                 trace_id UUID NOT NULL,
-                                job_id VARCHAR(50) NOT NULL,
+                                job_id UUID NOT NULL,
                                 job_type VARCHAR(50) NOT NULL,
                                 job_name VARCHAR(100) NOT NULL,
                                 parent_job_id VARCHAR(50),
