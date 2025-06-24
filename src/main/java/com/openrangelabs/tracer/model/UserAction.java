@@ -6,7 +6,7 @@ import java.util.UUID;
 
 public record UserAction(
         Long id,
-        UUID traceId,
+        UUID traceId,        // Changed from String to UUID
         String userId,
         String action,
         JsonNode actionData,
@@ -27,7 +27,7 @@ public record UserAction(
     }
 
     public static class Builder {
-        private UUID traceId;
+        private UUID traceId;       // Changed from String to UUID
         private String userId;
         private String action;
         private JsonNode actionData;
@@ -41,7 +41,17 @@ public record UserAction(
         private Integer responseSize;
         private Long durationMs;
 
-        public Builder traceId(UUID traceId) { this.traceId = traceId; return this; }
+        public Builder traceId(UUID traceId) {
+            this.traceId = traceId;
+            return this;
+        }
+
+        // Convenience method to accept String and convert to UUID
+        public Builder traceId(String traceId) {
+            this.traceId = traceId != null ? UUID.fromString(traceId) : null;
+            return this;
+        }
+
         public Builder userId(String userId) { this.userId = userId; return this; }
         public Builder action(String action) { this.action = action; return this; }
         public Builder actionData(JsonNode actionData) { this.actionData = actionData; return this; }

@@ -2,39 +2,48 @@ package com.openrangelabs.tracer.config;
 
 import com.openrangelabs.tracer.aspect.*;
 import com.openrangelabs.tracer.filter.TracingFilter;
-import com.openrangelabs.tracer.metrics.TracingMetrics;
 import com.openrangelabs.tracer.repository.JobExecutionRepository;
+import com.openrangelabs.tracer.repository.TracingRepository;
+import com.openrangelabs.tracer.repository.TracingRepositoryFactory;
 import com.openrangelabs.tracer.repository.UserActionRepository;
-import com.openrangelabs.tracer.service.BatchTracingService;
 import com.openrangelabs.tracer.service.JobTracingService;
 import com.openrangelabs.tracer.service.TracingService;
 import com.openrangelabs.tracer.controller.TracingController;
+import com.openrangelabs.tracer.util.TraceContextExecutor;
+import com.openrangelabs.tracer.util.UuidConverterFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.*;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import io.micrometer.core.instrument.MeterRegistry;
 
-import javax.sql.DataSource;
-import java.util.Optional;
 import java.util.concurrent.Executor;
 
+/**
+ * Main auto-configuration for the Tracer library.
+ * Imports database-specific configurations and sets up core components.
+ */
 @AutoConfiguration
-@ConditionalOnClass({JdbcTemplate.class})
-@ConditionalOnBean(DataSource.class)  // Add this - ensures DataSource exists
 @ConditionalOnProperty(prefix = "tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(TracingProperties.class)
 @EnableAspectJAutoProxy
 @EnableAsync
-@EnableScheduling
+@Import({
+        JdbcTracingAutoConfiguration.class,
+        MongoTracingAutoConfiguration.class
+})
 public class TracingAutoConfiguration {
+
+    // ==================== CORE COMPONENTS ====================
 
     @Bean
     @ConditionalOnMissingBean
@@ -44,18 +53,33 @@ public class TracingAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public UserActionRepository userActionRepository(JdbcTemplate jdbcTemplate,
-                                                     ObjectMapper objectMapper,
-                                                     TracingProperties properties) {
-        return new UserActionRepository(jdbcTemplate, objectMapper, properties);
+    public UuidConverterFactory uuidConverterFactory() {
+        return new UuidConverterFactory();
     }
 
     @Bean
     @ConditionalOnMissingBean
-    public JobExecutionRepository jobExecutionRepository(JdbcTemplate jdbcTemplate,
-                                                         ObjectMapper objectMapper,
-                                                         TracingProperties properties) {
-        return new JobExecutionRepository(jdbcTemplate, objectMapper, properties);
+    public TracingRepositoryFactory tracingRepositoryFactory(
+            ApplicationContext applicationContext,
+            TracingProperties properties) {
+        return new TracingRepositoryFactory(applicationContext, properties);
+    }
+
+    // ==================== MAIN REPOSITORY BEAN ====================
+
+    @Bean
+    @ConditionalOnMissingBean
+    public TracingRepository tracingRepository(TracingRepositoryFactory factory) {
+        return factory.createTracingRepository();
+    }
+
+    // ==================== SERVICE LAYER ====================
+
+    @Bean
+    @ConditionalOnMissingBean
+    public JobTracingService jobTracingService(JobExecutionRepository jobExecutionRepository,
+                                               ObjectMapper objectMapper) {
+        return new JobTracingService(jobExecutionRepository, objectMapper);
     }
 
     @Bean
@@ -66,12 +90,7 @@ public class TracingAutoConfiguration {
         return new TracingService(userActionRepository, jobTracingService, objectMapper);
     }
 
-    @Bean
-    @ConditionalOnMissingBean
-    public JobTracingService jobTracingService(JobExecutionRepository jobExecutionRepository,
-                                               ObjectMapper objectMapper) {
-        return new JobTracingService(jobExecutionRepository, objectMapper);
-    }
+    // ==================== WEB COMPONENTS ====================
 
     @Bean
     @ConditionalOnWebApplication
@@ -79,6 +98,19 @@ public class TracingAutoConfiguration {
     public TracingFilter tracingFilter(TracingProperties properties) {
         return new TracingFilter(properties);
     }
+
+    @Bean
+    @ConditionalOnWebApplication
+    @ConditionalOnProperty(prefix = "tracing.monitoring", name = "metricsEnabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(JdbcTemplate.class)
+    public TracingController tracingController(JdbcTemplate jdbcTemplate,
+                                               TracingProperties properties,
+                                               ApplicationContext applicationContext) {
+        return new TracingController(jdbcTemplate, properties, applicationContext);
+    }
+
+    // ==================== ASPECT CONFIGURATION ====================
 
     @Bean
     @ConditionalOnMissingBean
@@ -105,6 +137,8 @@ public class TracingAutoConfiguration {
         return new MeasurePerformanceAspect();
     }
 
+    // ==================== ASYNC CONFIGURATION ====================
+
     @Bean("tracingExecutor")
     @ConditionalOnProperty(prefix = "tracing.async", name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean(name = "tracingExecutor")
@@ -125,37 +159,29 @@ public class TracingAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnWebApplication
-    @ConditionalOnProperty(prefix = "tracing.monitoring", name = "metricsEnabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public TracingController tracingController(JdbcTemplate jdbcTemplate,
-                                               TracingProperties properties,
-                                               ApplicationContext applicationContext) {
-        return new TracingController(jdbcTemplate, properties, applicationContext);
+    public TraceContextExecutor traceContextExecutor() {
+        return new TraceContextExecutor();
     }
 
-    @Bean
-    @ConditionalOnProperty(prefix = "tracing", name = "autoCreateTables", havingValue = "true", matchIfMissing = true)
-    public TracingSchemaInitializer tracingSchemaInitializer(JdbcTemplate jdbcTemplate,
-                                                             TracingProperties properties) {
-        return new TracingSchemaInitializer(jdbcTemplate, properties);
-    }
+    // ==================== HEALTH AND METRICS ====================
 
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(MeterRegistry.class)
-    public TracingMetrics tracingMetrics() {
-        return new TracingMetrics();
-    }
+    // Commented out until Actuator dependency is available
+    // @Bean
+    // @ConditionalOnClass(name = "org.springframework.boot.actuator.health.HealthIndicator")
+    // @ConditionalOnProperty(prefix = "tracing.monitoring", name = "healthCheck", havingValue = "true", matchIfMissing = true)
+    // @ConditionalOnMissingBean
+    // public TracingHealthIndicator tracingHealthIndicator(TracingRepository tracingRepository,
+    //                                                      TracingProperties properties) {
+    //     return new TracingHealthIndicator(tracingRepository, properties);
+    // }
+
+    // ==================== CONFIGURATION VALIDATION ====================
 
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnBean({DataSource.class})  // Ensure DataSource exists
-    public BatchTracingService batchTracingService(UserActionRepository userActionRepository,
-                                                   JobExecutionRepository jobExecutionRepository,
-                                                   TracingProperties properties,
-                                                   Optional<TracingMetrics> tracingMetrics) {
-        return new BatchTracingService(userActionRepository, jobExecutionRepository,
-                properties, tracingMetrics);
+    public TracingConfigurationValidator tracingConfigurationValidator(TracingProperties properties,
+                                                                       TracingRepositoryFactory factory) {
+        return new TracingConfigurationValidator(properties, factory);
     }
 }

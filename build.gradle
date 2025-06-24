@@ -12,6 +12,8 @@ description = 'Distributed tracing and monitoring starter for Spring Boot applic
 java {
     sourceCompatibility = '17'
     targetCompatibility = '17'
+    withSourcesJar()
+    withJavadocJar()
 }
 
 configurations {
@@ -31,60 +33,298 @@ dependencyManagement {
 }
 
 dependencies {
+    // Core Spring Boot dependencies (required)
     api 'org.springframework.boot:spring-boot-starter'
-    api 'org.springframework.boot:spring-boot-starter-web'
-    api 'org.springframework.boot:spring-boot-starter-data-jdbc'
     api 'org.springframework.boot:spring-boot-starter-aop'
-    api 'org.springframework.boot:spring-boot-starter-jdbc'
 
-    implementation 'org.springframework:spring-context'
-    implementation 'org.springframework:spring-context-support' // For @Scheduled
-    implementation 'org.springframework.boot:spring-boot-starter-validation'
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'io.github.resilience4j:resilience4j-circuitbreaker:2.1.0'
-    implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.1.0'
+    // JSON processing (required)
+    api 'com.fasterxml.jackson.core:jackson-databind'
 
-    implementation 'io.micrometer:micrometer-core'
-    // Optional: For specific registry (Prometheus, etc.)
-    // implementation 'io.micrometer:micrometer-registry-prometheus'
+    // Validation support (required for some annotations)
+    api 'org.springframework.boot:spring-boot-starter-validation'
 
-    implementation 'org.postgresql:postgresql:42.7.7'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    // ==================== DATABASE DEPENDENCIES ====================
 
+    // JDBC Support (optional - only include if using JDBC databases)
+    compileOnly 'org.springframework.boot:spring-boot-starter-data-jdbc'
+
+    // PostgreSQL Driver (optional)
+    compileOnly 'org.postgresql:postgresql:42.7.7'
+
+    // MySQL Driver (optional)
+    compileOnly 'com.mysql:mysql-connector-j:8.2.0'
+
+    // MariaDB Driver (optional)
+    compileOnly 'org.mariadb.jdbc:mariadb-java-client:3.3.2'
+
+    // MongoDB Support (optional)
+    compileOnly 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+    // Connection Pooling (optional but recommended for JDBC)
+    compileOnly 'com.zaxxer:HikariCP'
+
+    // ==================== WEB DEPENDENCIES ====================
+
+    // Web support for controller endpoints (optional)
+    compileOnly 'org.springframework.boot:spring-boot-starter-web'
+
+    // Actuator for health checks and metrics (optional)
+    compileOnly 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Resilience4j for circuit breaker (optional)
+    compileOnly 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+    compileOnly 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
+
+    // ==================== CONFIGURATION PROCESSING ====================
+
+    // Configuration processor for IDE support
     compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
+    // ==================== TESTING DEPENDENCIES ====================
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Database testing support
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+
+    // In-memory databases for testing
+    testImplementation 'com.h2database:h2:2.2.224'
+    testImplementation 'de.flapdoodle.embed:de.flapdoodle.embed.mongo:4.11.0'
+
+    // Test database drivers
+    testImplementation 'org.postgresql:postgresql:42.7.7'
+    testImplementation 'com.mysql:mysql-connector-j:8.2.0'
+    testImplementation 'org.mariadb.jdbc:mariadb-java-client:3.3.2'
+
+    // Testcontainers for integration testing (optional)
+    testImplementation 'org.testcontainers:testcontainers:1.19.3'
+    testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+    testImplementation 'org.testcontainers:postgresql:1.19.3'
+    testImplementation 'org.testcontainers:mysql:1.19.3'
+    testImplementation 'org.testcontainers:mariadb:1.19.3'
+    testImplementation 'org.testcontainers:mongodb:1.19.3'
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
+// ==================== JAR CONFIGURATION ====================
 
-// Configure JAR for library distribution
 jar {
     archiveBaseName = 'tracer'
     archiveVersion = '1.0'
     enabled = true
+
+    manifest {
+        attributes(
+                'Implementation-Title': project.name,
+                'Implementation-Version': project.version,
+                'Implementation-Vendor': 'OpenRange Labs',
+                'Built-By': System.getProperty('user.name'),
+                'Built-Date': new Date(),
+                'Built-JDK': System.getProperty('java.version'),
+                'Built-Gradle': gradle.gradleVersion
+        )
+    }
 }
 
-// Publishing configuration
+// ==================== PUBLISHING CONFIGURATION ====================
+
 publishing {
     publications {
         maven(MavenPublication) {
             from components.java
 
             pom {
-                name = 'Tracer'
-                description = 'Distributed tracing and monitoring starter for Spring Boot applications'
+                name = 'Tracer - Multi-Database Tracing Library'
+                description = 'Distributed tracing and monitoring starter for Spring Boot applications with support for PostgreSQL, MySQL, MariaDB, and MongoDB'
+                url = 'https://github.com/your-org/tracer'
 
                 licenses {
                     license {
                         name = 'MIT License'
-                        url = 'https://raw.githubusercontent.com/mike-norris/tracker/refs/heads/main/LICENSE'
+                        url = 'https://raw.githubusercontent.com/your-org/tracer/main/LICENSE'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'your-id'
+                        name = 'Your Name'
+                        email = 'your-email@example.com'
+                    }
+                }
+
+                scm {
+                    connection = 'scm:git:git://github.com/your-org/tracer.git'
+                    developerConnection = 'scm:git:ssh://github.com:your-org/tracer.git'
+                    url = 'https://github.com/your-org/tracer/tree/main'
+                }
+
+                // Optional dependencies section to help users understand what they need
+                withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+
+                    // Add optional dependency information
+                    def optionalDeps = [
+                            [groupId: 'org.springframework.boot', artifactId: 'spring-boot-starter-data-jdbc', scope: 'compile', optional: true],
+                            [groupId: 'org.postgresql', artifactId: 'postgresql', scope: 'runtime', optional: true],
+                            [groupId: 'com.mysql', artifactId: 'mysql-connector-j', scope: 'runtime', optional: true],
+                            [groupId: 'org.mariadb.jdbc', artifactId: 'mariadb-java-client', scope: 'runtime', optional: true],
+                            [groupId: 'org.springframework.boot', artifactId: 'spring-boot-starter-data-mongodb', scope: 'compile', optional: true],
+                            [groupId: 'org.springframework.boot', artifactId: 'spring-boot-starter-web', scope: 'compile', optional: true]
+                    ]
+
+                    optionalDeps.each { dep ->
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', dep.groupId)
+                        dependencyNode.appendNode('artifactId', dep.artifactId)
+                        dependencyNode.appendNode('scope', dep.scope)
+                        if (dep.optional) {
+                            dependencyNode.appendNode('optional', 'true')
+                        }
                     }
                 }
             }
         }
     }
 }
+
+// ==================== TESTING CONFIGURATION ====================
+
+test {
+    useJUnitPlatform()
+
+    // Test configuration
+    testLogging {
+        events "passed", "skipped", "failed"
+        exceptionFormat "full"
+    }
+
+    // System properties for tests
+    systemProperty 'spring.profiles.active', 'test'
+
+    // JVM arguments for tests
+    jvmArgs '-Xmx512m'
+}
+
+// ==================== GRADLE TASK CUSTOMIZATIONS ====================
+
+// Task to validate database drivers are available
+task validateDatabaseSupport {
+    description = 'Validates that database drivers are available on the classpath'
+    group = 'verification'
+
+    doLast {
+        def drivers = [
+                'PostgreSQL': 'org.postgresql.Driver',
+                'MySQL': 'com.mysql.cj.jdbc.Driver',
+                'MariaDB': 'org.mariadb.jdbc.Driver'
+        ]
+
+        println "Validating database driver availability:"
+        drivers.each { name, className ->
+            try {
+                Class.forName(className)
+                println "✓ $name driver available"
+            } catch (ClassNotFoundException e) {
+                println "✗ $name driver NOT available (optional)"
+            }
+        }
+
+        // Check MongoDB
+        try {
+            Class.forName('org.springframework.data.mongodb.core.MongoTemplate')
+            println "✓ MongoDB support available"
+        } catch (ClassNotFoundException e) {
+            println "✗ MongoDB support NOT available (optional)"
+        }
+    }
+}
+
+// ==================== IDE CONFIGURATION ====================
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
+
+// ==================== COMPATIBILITY AND FEATURE FLAGS ====================
+
+compileJava {
+    options.compilerArgs += [
+            '-parameters',  // Enable parameter names in bytecode
+            '-Xlint:unchecked',
+            '-Xlint:deprecation'
+    ]
+}
+
+javadoc {
+    options.addStringOption('Xdoclint:none', '-quiet')
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
+
+// ==================== DOCUMENTATION GENERATION ====================
+
+task generateDependencyReport {
+    description = 'Generates a dependency report showing which databases are supported'
+    group = 'documentation'
+
+    doLast {
+        def report = new File(project.buildDir, 'reports/dependencies.md')
+        report.parentFile.mkdirs()
+
+        def content = '''# Tracer Library Dependencies
+
+## Required Dependencies
+- Spring Boot Starter
+- Spring Boot AOP Starter  
+- Jackson Databind
+
+## Optional Database Dependencies
+
+### PostgreSQL Support
+```gradle
+implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+runtimeOnly 'org.postgresql:postgresql:42.7.7'
+```
+
+### MySQL Support  
+```gradle
+implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
+runtimeOnly 'com.mysql:mysql-connector-j:8.2.0'
+```
+
+### MariaDB Support
+```gradle
+implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'  
+runtimeOnly 'org.mariadb.jdbc:mariadb-java-client:3.3.2'
+```
+
+### MongoDB Support
+```gradle
+implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
+```
+
+## Configuration Example
+```yaml
+tracing:
+  database:
+    type: postgresql  # postgresql, mysql, mariadb, mongodb
+    connection:
+      url: jdbc:postgresql://localhost:5432/tracing
+      username: tracer
+      password: password
+```
+'''
+
+        report.text = content
+        println "Dependency report generated: ${report.absolutePath}"
+    }
+}
+
+// Run validation after compile
+compileJava.finalizedBy validateDatabaseSupport

@@ -1,0 +1,7 @@
+# Auto Configuration
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.openrangelabs.tracer.config.TracingAutoConfiguration
+
+# Configuration Properties
+org.springframework.boot.context.properties.EnableConfigurationProperties=\
+com.openrangelabs.tracer.config.TracingProperties
