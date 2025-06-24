@@ -33,8 +33,8 @@ public record TracingProperties(
     ) {}
 
     public record Pool(
-            @DefaultValue("20") int maximumPoolSize,
-            @DefaultValue("5") int minimumIdle,
+            @DefaultValue("8") int maximumPoolSize,
+            @DefaultValue("4") int minimumIdle,
             @DefaultValue("30000") long connectionTimeoutMs,
             @DefaultValue("600000") long idleTimeoutMs,
             @DefaultValue("1800000") long maxLifetimeMs,
@@ -56,8 +56,8 @@ public record TracingProperties(
     public record Async(
             @DefaultValue("true") boolean enabled,
             @DefaultValue("tracing-executor") String threadPoolName,
-            @DefaultValue("5") int corePoolSize,
-            @DefaultValue("20") int maxPoolSize,
+            @DefaultValue("4") int corePoolSize,
+            @DefaultValue("8") int maxPoolSize,
             @DefaultValue("60") int keepAliveSeconds,
             @DefaultValue("500") int queueCapacity
     ) {}

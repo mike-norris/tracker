@@ -9,6 +9,20 @@ tracing:
     job-executions-table: job_executions
     enable-partitioning: false
     batch-size: 1000
+    database:
+      # For Mongo enable the following
+      #type: mongodb
+      #mongodb:
+      #  uri: mongodb://localhost:27017/tracing
+      #  database: tracing
+      # END Mongo
+      # For SQL database enable the following
+      type: postgresql
+      connection:
+        url: jdbc:postgresql://localhost:5432/tracing
+        username: tracer
+        password: password
+      # END SQL
   async:
     enabled: true
     thread-pool-name: tracing-executor

@@ -289,8 +289,8 @@ public abstract class BaseTracingRepository implements TracingRepository {
         if (userAction == null) {
             throw new IllegalArgumentException("UserAction cannot be null");
         }
-        if (userAction.traceId() == null || userAction.traceId().trim().isEmpty()) {
-            throw new IllegalArgumentException("UserAction traceId cannot be null or empty");
+        if (userAction.traceId() == null) {
+            throw new IllegalArgumentException("UserAction traceId cannot be null");
         }
         if (userAction.action() == null || userAction.action().trim().isEmpty()) {
             throw new IllegalArgumentException("UserAction action cannot be null or empty");
@@ -301,20 +301,20 @@ public abstract class BaseTracingRepository implements TracingRepository {
         if (jobExecution == null) {
             throw new IllegalArgumentException("JobExecution cannot be null");
         }
-        if (jobExecution.traceId() == null || jobExecution.traceId().trim().isEmpty()) {
-            throw new IllegalArgumentException("JobExecution traceId cannot be null or empty");
+        if (jobExecution.traceId() == null) {
+            throw new IllegalArgumentException("JobExecution traceId cannot be null");
         }
-        if (jobExecution.jobId() == null || jobExecution.jobId().trim().isEmpty()) {
-            throw new IllegalArgumentException("JobExecution jobId cannot be null or empty");
+        if (jobExecution.jobId() == null) {
+            throw new IllegalArgumentException("JobExecution jobId cannot be null");
         }
         if (jobExecution.jobType() == null || jobExecution.jobType().trim().isEmpty()) {
             throw new IllegalArgumentException("JobExecution jobType cannot be null or empty");
         }
     }
 
-    protected void validateTraceId(String traceId) {
-        if (traceId == null || traceId.trim().isEmpty()) {
-            throw new IllegalArgumentException("TraceId cannot be null or empty");
+    protected void validateTraceId(UUID traceId) {
+        if (traceId == null) {
+            throw new IllegalArgumentException("TraceId cannot be null");
         }
     }
 
@@ -330,9 +330,9 @@ public abstract class BaseTracingRepository implements TracingRepository {
         }
     }
 
-    protected void validateJobId(String jobId) {
-        if (jobId == null || jobId.trim().isEmpty()) {
-            throw new IllegalArgumentException("JobId cannot be null or empty");
+    protected void validateJobId(UUID jobId) {
+        if (jobId == null) {
+            throw new IllegalArgumentException("JobId cannot be null");
         }
     }
 

@@ -238,11 +238,11 @@ public interface JobExecutionRepository {
      * Search criteria for job executions
      */
     record SearchCriteria(
-            String traceId,
-            String jobId,
+            UUID traceId,        // Changed from String to UUID
+            UUID jobId,          // Changed from String to UUID
             String jobType,
             String jobName,
-            String parentJobId,
+            UUID parentJobId,    // Changed from String to UUID
             String userId,
             JobStatus status,
             String queueName,

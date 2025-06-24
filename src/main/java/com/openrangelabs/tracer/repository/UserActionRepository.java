@@ -170,7 +170,7 @@ public interface UserActionRepository {
      * Search criteria for user actions
      */
     record SearchCriteria(
-            String traceId,
+            UUID traceId,        // Changed from String to UUID
             String userId,
             String action,
             String sessionId,

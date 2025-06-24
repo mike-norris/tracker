@@ -40,6 +40,9 @@ dependencies {
     // JSON processing (required)
     api 'com.fasterxml.jackson.core:jackson-databind'
 
+    // Validation support (required for some annotations)
+    api 'org.springframework.boot:spring-boot-starter-validation'
+
     // ==================== DATABASE DEPENDENCIES ====================
 
     // JDBC Support (optional - only include if using JDBC databases)
@@ -67,6 +70,10 @@ dependencies {
 
     // Actuator for health checks and metrics (optional)
     compileOnly 'org.springframework.boot:spring-boot-starter-actuator'
+
+    // Resilience4j for circuit breaker (optional)
+    compileOnly 'io.github.resilience4j:resilience4j-spring-boot3:2.2.0'
+    compileOnly 'io.github.resilience4j:resilience4j-circuitbreaker:2.2.0'
 
     // ==================== CONFIGURATION PROCESSING ====================
 
@@ -197,7 +204,7 @@ test {
     systemProperty 'spring.profiles.active', 'test'
 
     // JVM arguments for tests
-    jvmArgs '-Xmx256m'
+    jvmArgs '-Xmx512m'
 }
 
 // ==================== GRADLE TASK CUSTOMIZATIONS ====================
