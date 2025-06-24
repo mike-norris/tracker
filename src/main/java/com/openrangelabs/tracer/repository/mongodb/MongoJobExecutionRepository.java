@@ -360,7 +360,7 @@ public class MongoJobExecutionRepository implements JobExecutionRepository {
         ProjectionOperation project = Aggregation.project("pendingJobs", "runningJobs", "completedToday",
                         "failedToday", "avgProcessingTime", "oldestPending")
                 .and("_id").as("queueName")
-                .andLiteral(0.0).as("avgWaitTime"); // MongoDB doesn't easily calculate wait time without complex aggregation
+                .and(LiteralOperators.Literal.asLiteral(0.0)).as("avgWaitTime"); // MongoDB doesn't easily calculate wait time without complex aggregation
 
         SortOperation sort = Aggregation.sort(Sort.Direction.DESC, "pendingJobs");
 
@@ -485,8 +485,8 @@ public class MongoJobExecutionRepository implements JobExecutionRepository {
         ProjectionOperation project = Aggregation.project("occurrenceCount", "affectedJobTypes",
                         "affectedQueues", "firstOccurrence", "lastOccurrence")
                 .and("_id").as("errorMessage")
-                .andLiteral("Error").as("errorType") // Static value
-                .andLiteral(0.0).as("failureRate"); // Would need additional calculation
+                .and(LiteralOperators.Literal.asLiteral("Error")).as("errorType") // Static value
+                .and(LiteralOperators.Literal.asLiteral(0.0)).as("failureRate"); // Would need additional calculation
 
         SortOperation sort = Aggregation.sort(Sort.Direction.DESC, "occurrenceCount");
         LimitOperation limit = Aggregation.limit(20);

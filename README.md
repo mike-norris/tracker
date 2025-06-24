@@ -1,80 +1,263 @@
-# Tracer
+# Usage Examples
 
-## Getting started
+This document provides practical examples of using the Spring Boot Tracer Library in real-world scenarios.
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## Table of Contents
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- [Basic Web Application](#basic-web-application)
+- [E-commerce Platform](#e-commerce-platform)
+- [Microservices Architecture](#microservices-architecture)
+- [Batch Processing System](#batch-processing-system)
+- [API Gateway Integration](#api-gateway-integration)
+- [Background Job Processing](#background-job-processing)
+- [Performance Monitoring](#performance-monitoring)
+- [Error Handling and Recovery](#error-handling-and-recovery)
 
+---
 
-## Integrate with your tools
+## Basic Web Application
 
-- [ ] [Set up project integrations](https://git.dcblox.com/openrangelabs/middleware-tracer/-/settings/integrations)
+### User Registration and Login System
 
-## Collaborate with your team
+```java
+@RestController
+@RequestMapping("/api/users")
+public class UserController {
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+    private final UserService userService;
+    private final EmailService emailService;
 
-## Test and Deploy
+    @PostMapping("/register")
+    @TraceUserAction(value = "user_registration", category = "AUTHENTICATION")
+    public ResponseEntity<UserResponse> registerUser(@RequestBody @Valid RegisterRequest request) {
+        User user = userService.createUser(request);
+        
+        // Trigger welcome email asynchronously
+        emailService.sendWelcomeEmailAsync(user.getId());
+        
+        return ResponseEntity.ok(UserResponse.from(user));
+    }
 
-Use the built-in continuous integration in GitLab.
+    @PostMapping("/login")
+    @TraceUserAction(value = "user_login", category = "AUTHENTICATION", measureTiming = true)
+    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+        LoginResponse response = userService.authenticate(request);
+        return ResponseEntity.ok(response);
+    }
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+    @GetMapping("/{userId}/profile")
+    @TraceUserAction(value = "profile_view", category = "USER_INTERACTION")
+    public ResponseEntity<UserProfile> getProfile(@PathVariable String userId) {
+        UserProfile profile = userService.getUserProfile(userId);
+        return ResponseEntity.ok(profile);
+    }
+}
 
-***
+@Service
+public class UserService {
 
-# Editing this README
+    @MeasurePerformance(value = "user_creation", slowThresholdMs = 2000)
+    @PropagateTrace
+    public User createUser(RegisterRequest request) {
+        // Validate user data
+        validateUserData(request);
+        
+        // Create user account
+        User user = User.builder()
+            .email(request.getEmail())
+            .name(request.getName())
+            .build();
+            
+        return userRepository.save(user);
+    }
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+    @MeasurePerformance(value = "user_authentication")
+    public LoginResponse authenticate(LoginRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+            
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new AuthenticationException("Invalid credentials");
+        }
+        
+        String token = jwtService.generateToken(user);
+        return new LoginResponse(token, user.getId());
+    }
+}
 
-## Suggestions for a good README
+@Service
+public class EmailService {
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+    @TraceJob(jobType = "EMAIL", jobName = "welcome_email", queueName = "notifications")
+    @Async
+    public void sendWelcomeEmailAsync(String userId) {
+        User user = userService.findById(userId);
+        sendWelcomeEmail(user);
+    }
 
-## Name
-Choose a self-explaining name for your project.
+    @MeasurePerformance(value = "email_send", measureMemory = true)
+    private void sendWelcomeEmail(User user) {
+        // Email sending logic
+        EmailTemplate template = templateService.getWelcomeTemplate();
+        emailProvider.send(user.getEmail(), template.render(user));
+    }
+}
+```
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### Configuration
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```yaml
+tracing:
+  enabled: true
+  database:
+    type: postgresql
+    connection:
+      url: jdbc:postgresql://localhost:5432/user_app
+      username: app_user
+      password: ${DB_PASSWORD}
+  async:
+    core-pool-size: 4
+    max-pool-size: 8
+    queue-capacity: 1000
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+---
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+## E-commerce Platform
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+### Product Catalog and Order Processing
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+```java
+@RestController
+@RequestMapping("/api/products")
+public class ProductController {
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+    @GetMapping("/search")
+    @TraceUserAction(value = "product_search", category = "CATALOG")
+    @MeasurePerformance(value = "product_search", sample = true, sampleRate = 0.1)
+    public ResponseEntity<List<Product>> searchProducts(
+            @RequestParam String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        
+        SearchResult<Product> results = productService.searchProducts(query, page, size);
+        return ResponseEntity.ok(results.getContent());
+    }
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+    @GetMapping("/{productId}")
+    @TraceUserAction(value = "product_view", category = "CATALOG")
+    public ResponseEntity<ProductDetails> getProduct(@PathVariable String productId) {
+        ProductDetails product = productService.getProductDetails(productId);
+        return ResponseEntity.ok(product);
+    }
+}
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+@RestController
+@RequestMapping("/api/orders")
+public class OrderController {
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+    @PostMapping
+    @TraceUserAction(value = "order_creation", category = "ORDER", measureTiming = true)
+    public ResponseEntity<OrderResponse> createOrder(@RequestBody CreateOrderRequest request) {
+        Order order = orderService.createOrder(request);
+        
+        // Trigger order processing workflow
+        orderProcessingService.processOrderAsync(order.getId());
+        
+        return ResponseEntity.ok(OrderResponse.from(order));
+    }
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+    @GetMapping("/{orderId}/status")
+    @TraceUserAction(value = "order_status_check", category = "ORDER")
+    public ResponseEntity<OrderStatus> getOrderStatus(@PathVariable String orderId) {
+        OrderStatus status = orderService.getOrderStatus(orderId);
+        return ResponseEntity.ok(status);
+    }
+}
 
-## License
-For open source projects, say how it is licensed.
+@Service
+public class OrderProcessingService {
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+    @TraceJob(jobType = "ORDER_PROCESSING", jobName = "process_order", priority = 7)
+    @PropagateTrace
+    public void processOrderAsync(String orderId) {
+        Order order = orderService.findById(orderId);
+        
+        // Validate inventory
+        inventoryService.validateInventory(order);
+        
+        // Process payment
+        paymentService.processPayment(order);
+        
+        // Update order status
+        orderService.updateStatus(orderId, OrderStatus.CONFIRMED);
+        
+        // Schedule fulfillment
+        fulfillmentService.scheduleFulfillment(orderId);
+    }
+
+    @TraceJob(jobType = "INVENTORY", jobName = "inventory_check")
+    @MeasurePerformance(value = "inventory_validation", slowThresholdMs = 3000)
+    public void validateInventory(Order order) {
+        for (OrderItem item : order.getItems()) {
+            int available = inventoryRepository.getAvailableQuantity(item.getProductId());
+            if (available < item.getQuantity()) {
+                throw new InsufficientInventoryException(
+                    "Not enough inventory for product: " + item.getProductId());
+            }
+        }
+    }
+
+    @TraceJob(jobType = "PAYMENT", jobName = "payment_processing", measureResources = true)
+    @MeasurePerformance(value = "payment_processing", slowThresholdMs = 5000)
+    public void processPayment(Order order) {
+        PaymentRequest paymentRequest = PaymentRequest.builder()
+            .amount(order.getTotalAmount())
+            .currency(order.getCurrency())
+            .paymentMethod(order.getPaymentMethod())
+            .build();
+            
+        PaymentResult result = paymentGateway.processPayment(paymentRequest);
+        
+        if (!result.isSuccessful()) {
+            throw new PaymentProcessingException("Payment failed: " + result.getErrorMessage());
+        }
+        
+        orderService.updatePaymentStatus(order.getId(), PaymentStatus.COMPLETED);
+    }
+}
+```
+
+### Analytics and Reporting
+
+```java
+@RestController
+@RequestMapping("/api/analytics")
+public class AnalyticsController {
+
+    @GetMapping("/products/popular")
+    @TraceUserAction(value = "popular_products_report", category = "ANALYTICS")
+    @MeasurePerformance(value = "analytics_query", slowThresholdMs = 10000)
+    public ResponseEntity<List<PopularProduct>> getPopularProducts(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<PopularProduct> products = analyticsService.getPopularProducts(startDate, endDate);
+        return ResponseEntity.ok(products);
+    }
+}
+
+@Service
+public class AnalyticsService {
+
+    @TraceJob(jobType = "ANALYTICS", jobName = "popular_products_analysis", priority = 3)
+    public List<PopularProduct> getPopularProducts(LocalDate startDate, LocalDate endDate) {
+        // Complex analytics query using tracing data
+        Instant start = startDate.atStartOfDay(ZoneOffset.UTC).toInstant();
+        Instant end = endDate.plusDays(1).atStartOfDay(ZoneOffset.UTC).toInstant();
+        
+        List<UserAction> productViews = userActionRepository
+            .findByActionAndTimeRange("product_view", start, end);
+            
+        return productViews.stream()
+            .collect(groupingBy(this::extract

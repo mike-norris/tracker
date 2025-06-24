@@ -1,6 +1,11 @@
-i# Compiled class files and other build artifacts
+# =============================================
+# Spring Boot Tracer Library - .gitignore
+# =============================================
+
+# Compiled class files and build artifacts
 *.class
 /build/
+/out/
 *.jar
 *.war
 *.ear
@@ -8,34 +13,244 @@ i# Compiled class files and other build artifacts
 
 # Gradle-specific files and directories
 .gradle/
-gradle/
+/gradle/wrapper/gradle-wrapper.properties
 .gradletasknamecache
 gradle-app.setting
-!gradle-wrapper.jar  # Keep the Gradle wrapper JAR for consistent builds
+!gradle/wrapper/gradle-wrapper.jar  # Keep wrapper JAR for consistent builds
 
-# Virtual machine crash logs
-hs_err_pid*
+# Maven (if used for testing)
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
 
-# IDE-specific files (IntelliJ IDEA example)
+# =============================================
+# IDE-specific files
+# =============================================
+
+# IntelliJ IDEA
 .idea/
 *.iml
 *.ipr
 *.iws
+out/
 
-# Eclipse-specific files (if applicable)
+# Eclipse
 .settings/
 .classpath
 .project
+.metadata
 bin/
 tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.recommenders
 
-# NetBeans-specific files (if applicable)
+# NetBeans
 nbproject/private/
 build/
 nbbuild/
 dist/
 nbdist/
+.nb-gradle/
 
-# Operating system specific files
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# =============================================
+# Operating System files
+# =============================================
+
+# macOS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================
+# Spring Boot / Application specific
+# =============================================
+
+# Application logs
+logs/
+*.log
+spring.log
+spring-*.log
+
+# Configuration files with sensitive data
+application-local.yml
+application-local.yaml
+application-local.properties
+application-dev.yml
+application-dev.yaml
+application-dev.properties
+application-prod.yml
+application-prod.yaml
+application-prod.properties
+
+# Database files (for embedded databases during testing)
+*.db
+*.h2.db
+*.mv.db
+*.trace.db
+
+# =============================================
+# Development and Testing
+# =============================================
+
+# Test output
+/test-output/
+test-results/
+build/reports/
+build/test-results/
+
+# Coverage reports
+build/jacoco/
+*.exec
+
+# JVM crash logs
+hs_err_pid*
+replay_pid*
+
+# =============================================
+# Documentation and Publishing
+# =============================================
+
+# Generated documentation
+/docs/build/
+/docs/.gradle/
+
+# Package files for distribution
+*.tar.gz
+*.zip
+
+# =============================================
+# Library Development Specific
+# =============================================
+
+# Local test applications (if you create them for testing)
+/test-app/
+/example-app/
+/sample-projects/
+
+# Library version files (if auto-generated)
+version.properties
+
+# =============================================
+# Security and Secrets
+# =============================================
+
+# API keys and secrets
+.env
+.env.local
+.env.development
+.env.production
+secrets.yml
+secrets.yaml
+secrets.properties
+
+# SSL certificates and keys
+*.p12
+*.jks
+*.keystore
+*.truststore
+*.pem
+*.key
+*.crt
+*.cer
+
+# =============================================
+# Temporary and Cache files
+# =============================================
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Node.js (if used for build tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# =============================================
+# Containerization
+# =============================================
+
+# Docker
+.dockerignore
+
+# Kubernetes
+*.kubeconfig
+
+# =============================================
+# Monitoring and Profiling
+# =============================================
+
+# JProfiler
+*.jprofile
+
+# YourKit
+*.hprof
+
+# Flight Recorder
+*.jfr
+
+# =============================================
+# Cloud and Deployment
+# =============================================
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# Cloud provider specific
+.aws/
+.gcp/
+.azure/
+
+# =============================================
+# Custom exclusions for this project
+# =============================================
+
+# Local database connections for testing
+/local-db/
+/test-data/
+
+# Performance test results
+/perf-results/
+
+# Local configuration overrides for development
+application-*.local.*
+bootstrap-*.local.*
