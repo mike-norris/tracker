@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Repository interface specifically for job execution operations.
@@ -27,6 +28,13 @@ public interface JobExecutionRepository {
     void saveAll(List<JobExecution> jobExecutions);
 
     /**
+     * Batch save method (alias for saveAll for backward compatibility)
+     */
+    default void saveBatch(List<JobExecution> jobExecutions) {
+        saveAll(jobExecutions);
+    }
+
+    /**
      * Find job execution by ID
      */
     Optional<JobExecution> findById(Long id);
@@ -34,47 +42,47 @@ public interface JobExecutionRepository {
     /**
      * Find job execution by job ID (business identifier)
      */
-    Optional<JobExecution> findByJobId(String jobId);
+    Optional<JobExecution> findByJobId(UUID jobId);
 
     /**
      * Check if job execution exists by job ID
      */
-    boolean existsByJobId(String jobId);
+    boolean existsByJobId(UUID jobId);
 
     // ==================== STATUS OPERATIONS ====================
 
     /**
      * Update job execution status
      */
-    void updateStatus(String jobId, JobStatus status);
+    void updateStatus(UUID jobId, JobStatus status);
 
     /**
      * Update job execution status with error message
      */
-    void updateStatus(String jobId, JobStatus status, String errorMessage);
+    void updateStatus(UUID jobId, JobStatus status, String errorMessage);
 
     /**
      * Update job execution with completion data
      */
-    void updateCompletion(String jobId, JobStatus status, Object outputData,
+    void updateCompletion(UUID jobId, JobStatus status, Object outputData,
                           Instant completedAt, Long durationMs);
 
     /**
      * Update job execution with failure data
      */
-    void updateFailure(String jobId, String errorMessage, String stackTrace, Instant failedAt);
+    void updateFailure(UUID jobId, String errorMessage, String stackTrace, Instant failedAt);
 
     /**
      * Update job execution retry information
      */
-    void updateRetry(String jobId, int retryCount, Instant nextRetryAt);
+    void updateRetry(UUID jobId, int retryCount, Instant nextRetryAt);
 
     // ==================== QUERY OPERATIONS ====================
 
     /**
      * Find all job executions for a specific trace
      */
-    List<JobExecution> findByTraceId(String traceId);
+    List<JobExecution> findByTraceId(UUID traceId);
 
     /**
      * Find job executions by user ID
@@ -124,7 +132,7 @@ public interface JobExecutionRepository {
     /**
      * Find child job executions by parent job ID
      */
-    List<JobExecution> findByParentJobId(String parentJobId);
+    List<JobExecution> findByParentJobId(UUID parentJobId);
 
     /**
      * Find job executions by worker ID
@@ -151,7 +159,7 @@ public interface JobExecutionRepository {
     /**
      * Count job executions by trace ID
      */
-    long countByTraceId(String traceId);
+    long countByTraceId(UUID traceId);
 
     /**
      * Count job executions by status
@@ -215,7 +223,7 @@ public interface JobExecutionRepository {
     /**
      * Delete job executions by trace ID
      */
-    int deleteByTraceId(String traceId);
+    int deleteByTraceId(UUID traceId);
 
     /**
      * Clean up completed jobs older than specified time

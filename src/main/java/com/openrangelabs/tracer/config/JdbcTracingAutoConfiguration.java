@@ -26,8 +26,6 @@ import java.util.Map;
 @AutoConfiguration
 @ConditionalOnClass({JdbcTemplate.class})
 @ConditionalOnProperty(prefix = "tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ConditionalOnProperty(prefix = "tracing.database", name = "type",
-        havingValue = "postgresql,mysql,mariadb", matchIfMissing = false)
 @EnableConfigurationProperties(TracingProperties.class)
 public class JdbcTracingAutoConfiguration {
 
@@ -64,8 +62,8 @@ public class JdbcTracingAutoConfiguration {
         @ConditionalOnMissingBean(name = "postgresqlTracingRepository")
         public TracingRepository postgresqlTracingRepository(
                 TracingProperties properties,
-                @Bean(name = "postgresqlUserActionRepository") UserActionRepository userActionRepository,
-                @Bean(name = "postgresqlJobExecutionRepository") JobExecutionRepository jobExecutionRepository) {
+                UserActionRepository userActionRepository,
+                JobExecutionRepository jobExecutionRepository) {
             return new PostgreSqlTracingRepository(properties, userActionRepository, jobExecutionRepository);
         }
     }
@@ -103,8 +101,8 @@ public class JdbcTracingAutoConfiguration {
         @ConditionalOnMissingBean(name = "mysqlTracingRepository")
         public TracingRepository mysqlTracingRepository(
                 TracingProperties properties,
-                @Bean(name = "mysqlUserActionRepository") UserActionRepository userActionRepository,
-                @Bean(name = "mysqlJobExecutionRepository") JobExecutionRepository jobExecutionRepository) {
+                UserActionRepository userActionRepository,
+                JobExecutionRepository jobExecutionRepository) {
             return new MySqlTracingRepository(properties, userActionRepository, jobExecutionRepository);
         }
     }
@@ -142,8 +140,8 @@ public class JdbcTracingAutoConfiguration {
         @ConditionalOnMissingBean(name = "mariadbTracingRepository")
         public TracingRepository mariadbTracingRepository(
                 TracingProperties properties,
-                @Bean(name = "mariadbUserActionRepository") UserActionRepository userActionRepository,
-                @Bean(name = "mariadbJobExecutionRepository") JobExecutionRepository jobExecutionRepository) {
+                UserActionRepository userActionRepository,
+                JobExecutionRepository jobExecutionRepository) {
             return new MariaDbTracingRepository(properties, userActionRepository, jobExecutionRepository);
         }
     }

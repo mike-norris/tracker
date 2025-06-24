@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Repository interface specifically for user action operations.
@@ -26,6 +27,13 @@ public interface UserActionRepository {
     void saveAll(List<UserAction> userActions);
 
     /**
+     * Batch save method (alias for saveAll for backward compatibility)
+     */
+    default void saveBatch(List<UserAction> userActions) {
+        saveAll(userActions);
+    }
+
+    /**
      * Find user action by ID
      */
     Optional<UserAction> findById(Long id);
@@ -40,7 +48,7 @@ public interface UserActionRepository {
     /**
      * Find all user actions for a specific trace
      */
-    List<UserAction> findByTraceId(String traceId);
+    List<UserAction> findByTraceId(UUID traceId);
 
     /**
      * Find user actions by user ID
@@ -97,7 +105,7 @@ public interface UserActionRepository {
     /**
      * Count user actions by trace ID
      */
-    long countByTraceId(String traceId);
+    long countByTraceId(UUID traceId);
 
     /**
      * Count user actions by user ID within time range
@@ -157,7 +165,7 @@ public interface UserActionRepository {
     /**
      * Delete user actions by trace ID
      */
-    int deleteByTraceId(String traceId);
+    int deleteByTraceId(UUID traceId);
 
     /**
      * Get table statistics

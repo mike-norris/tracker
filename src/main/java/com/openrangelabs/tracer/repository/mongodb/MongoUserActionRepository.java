@@ -323,7 +323,7 @@ public class MongoUserActionRepository implements UserActionRepository {
 
         // Create date bucket aggregation based on time bucket
         String dateFormat = getDateFormat(timeBucket);
-        GroupOperation group = Aggregation.group(DateOperators.DateToString.dateOf("timestamp").toString(dateFormat))
+        GroupOperation group = Aggregation.group(DateOperators.dateOf("timestamp").toString(dateFormat))
                 .count().as("totalRequests")
                 .sum(ConditionalOperators.when(Criteria.where("responseStatus").gte(400)).then(1).otherwise(0)).as("errorRequests");
 

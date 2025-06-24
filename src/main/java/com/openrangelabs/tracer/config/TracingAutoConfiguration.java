@@ -13,11 +13,12 @@ import com.openrangelabs.tracer.util.TraceContextExecutor;
 import com.openrangelabs.tracer.util.UuidConverterFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
@@ -59,7 +60,7 @@ public class TracingAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public TracingRepositoryFactory tracingRepositoryFactory(
-            org.springframework.context.ApplicationContext applicationContext,
+            ApplicationContext applicationContext,
             TracingProperties properties) {
         return new TracingRepositoryFactory(applicationContext, properties);
     }
@@ -102,9 +103,11 @@ public class TracingAutoConfiguration {
     @ConditionalOnWebApplication
     @ConditionalOnProperty(prefix = "tracing.monitoring", name = "metricsEnabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public TracingController tracingController(TracingRepository tracingRepository,
-                                               TracingProperties properties) {
-        return new TracingController(tracingRepository, properties);
+    @ConditionalOnBean(JdbcTemplate.class)
+    public TracingController tracingController(JdbcTemplate jdbcTemplate,
+                                               TracingProperties properties,
+                                               ApplicationContext applicationContext) {
+        return new TracingController(jdbcTemplate, properties, applicationContext);
     }
 
     // ==================== ASPECT CONFIGURATION ====================
@@ -163,14 +166,15 @@ public class TracingAutoConfiguration {
 
     // ==================== HEALTH AND METRICS ====================
 
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.boot.actuator.health.HealthIndicator")
-    @ConditionalOnProperty(prefix = "tracing.monitoring", name = "healthCheck", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnMissingBean
-    public TracingHealthIndicator tracingHealthIndicator(TracingRepository tracingRepository,
-                                                         TracingProperties properties) {
-        return new TracingHealthIndicator(tracingRepository, properties);
-    }
+    // Commented out until Actuator dependency is available
+    // @Bean
+    // @ConditionalOnClass(name = "org.springframework.boot.actuator.health.HealthIndicator")
+    // @ConditionalOnProperty(prefix = "tracing.monitoring", name = "healthCheck", havingValue = "true", matchIfMissing = true)
+    // @ConditionalOnMissingBean
+    // public TracingHealthIndicator tracingHealthIndicator(TracingRepository tracingRepository,
+    //                                                      TracingProperties properties) {
+    //     return new TracingHealthIndicator(tracingRepository, properties);
+    // }
 
     // ==================== CONFIGURATION VALIDATION ====================
 

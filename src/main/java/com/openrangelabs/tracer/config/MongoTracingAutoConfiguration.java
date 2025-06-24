@@ -23,7 +23,6 @@ import java.util.Map;
 @AutoConfiguration
 @ConditionalOnClass({MongoTemplate.class})
 @ConditionalOnProperty(prefix = "tracing", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ConditionalOnProperty(prefix = "tracing.database", name = "type", havingValue = "mongodb")
 @EnableConfigurationProperties(TracingProperties.class)
 public class MongoTracingAutoConfiguration {
 
@@ -51,8 +50,8 @@ public class MongoTracingAutoConfiguration {
         @ConditionalOnMissingBean(name = "mongoTracingRepository")
         public TracingRepository mongoTracingRepository(
                 TracingProperties properties,
-                @Bean(name = "mongoUserActionRepository") UserActionRepository userActionRepository,
-                @Bean(name = "mongoJobExecutionRepository") JobExecutionRepository jobExecutionRepository,
+                UserActionRepository userActionRepository,
+                JobExecutionRepository jobExecutionRepository,
                 MongoTemplate mongoTemplate) {
             return new MongoTracingRepository(properties, userActionRepository, jobExecutionRepository, mongoTemplate);
         }

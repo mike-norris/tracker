@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Main repository interface for tracing operations.
@@ -30,7 +31,7 @@ public interface TracingRepository {
     /**
      * Find user actions by trace ID
      */
-    List<UserAction> findUserActionsByTraceId(String traceId);
+    List<UserAction> findUserActionsByTraceId(UUID traceId);
 
     /**
      * Find user actions by user ID within a time range
@@ -57,22 +58,22 @@ public interface TracingRepository {
     /**
      * Find job executions by trace ID
      */
-    List<JobExecution> findJobExecutionsByTraceId(String traceId);
+    List<JobExecution> findJobExecutionsByTraceId(UUID traceId);
 
     /**
      * Find job execution by job ID
      */
-    Optional<JobExecution> findJobExecutionByJobId(String jobId);
+    Optional<JobExecution> findJobExecutionByJobId(UUID jobId);
 
     /**
      * Update job execution status
      */
-    void updateJobExecutionStatus(String jobId, JobStatus status, String errorMessage);
+    void updateJobExecutionStatus(UUID jobId, JobStatus status, String errorMessage);
 
     /**
      * Update job execution with completion data
      */
-    void updateJobExecutionCompletion(String jobId, JobStatus status, Object outputData,
+    void updateJobExecutionCompletion(UUID jobId, JobStatus status, Object outputData,
                                       Instant completedAt, Long durationMs);
 
     /**
@@ -90,12 +91,12 @@ public interface TracingRepository {
     /**
      * Get complete trace information (user actions + job executions)
      */
-    TraceInfo getTraceInfo(String traceId);
+    TraceInfo getTraceInfo(UUID traceId);
 
     /**
      * Check if a trace exists
      */
-    boolean traceExists(String traceId);
+    boolean traceExists(UUID traceId);
 
     /**
      * Get trace statistics for a time period
@@ -137,7 +138,7 @@ public interface TracingRepository {
      * Complete trace information including user actions and job executions
      */
     record TraceInfo(
-            String traceId,
+            UUID traceId,           // Changed from String to UUID
             List<UserAction> userActions,
             List<JobExecution> jobExecutions,
             Instant firstSeen,

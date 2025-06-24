@@ -12,6 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -57,7 +58,7 @@ public abstract class BaseTracingRepository implements TracingRepository {
     }
 
     @Override
-    public List<UserAction> findUserActionsByTraceId(String traceId) {
+    public List<UserAction> findUserActionsByTraceId(UUID traceId) {
         validateTraceId(traceId);
         return userActionRepository.findByTraceId(traceId);
     }
@@ -95,26 +96,26 @@ public abstract class BaseTracingRepository implements TracingRepository {
     }
 
     @Override
-    public List<JobExecution> findJobExecutionsByTraceId(String traceId) {
+    public List<JobExecution> findJobExecutionsByTraceId(UUID traceId) {
         validateTraceId(traceId);
         return jobExecutionRepository.findByTraceId(traceId);
     }
 
     @Override
-    public Optional<JobExecution> findJobExecutionByJobId(String jobId) {
+    public Optional<JobExecution> findJobExecutionByJobId(UUID jobId) {
         validateJobId(jobId);
         return jobExecutionRepository.findByJobId(jobId);
     }
 
     @Override
-    public void updateJobExecutionStatus(String jobId, JobStatus status, String errorMessage) {
+    public void updateJobExecutionStatus(UUID jobId, JobStatus status, String errorMessage) {
         validateJobId(jobId);
         validateJobStatus(status);
         jobExecutionRepository.updateStatus(jobId, status, errorMessage);
     }
 
     @Override
-    public void updateJobExecutionCompletion(String jobId, JobStatus status, Object outputData,
+    public void updateJobExecutionCompletion(UUID jobId, JobStatus status, Object outputData,
                                              Instant completedAt, Long durationMs) {
         validateJobId(jobId);
         validateJobStatus(status);
@@ -139,7 +140,7 @@ public abstract class BaseTracingRepository implements TracingRepository {
     // ==================== TRACE OPERATIONS ====================
 
     @Override
-    public TraceInfo getTraceInfo(String traceId) {
+    public TraceInfo getTraceInfo(UUID traceId) {
         validateTraceId(traceId);
 
         List<UserAction> userActions = findUserActionsByTraceId(traceId);
@@ -164,7 +165,7 @@ public abstract class BaseTracingRepository implements TracingRepository {
     }
 
     @Override
-    public boolean traceExists(String traceId) {
+    public boolean traceExists(UUID traceId) {
         validateTraceId(traceId);
 
         // Check if trace exists in either user actions or job executions
